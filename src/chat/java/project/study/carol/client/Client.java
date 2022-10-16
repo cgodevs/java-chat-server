@@ -11,19 +11,23 @@ import java.util.Scanner;
 import chat.java.project.study.carol.server.ReceiveFromServerTask;
 
 public class Client {
-	private Socket client;
+	private Socket clientSocket;
     protected String clientName;
     protected Scanner keyboard = new Scanner(System.in);
     private OutputStream fromClient;
     private InputStream toClient;
     protected PrintStream clientPrinting;
 
-    public Client (String host, int port) throws UnknownHostException, IOException {
-        this.client = new Socket(host, port);  
+    public PrintStream getClientPrinting() {
+		return clientPrinting;
+	}
+
+	public Client (String host, int port) throws UnknownHostException, IOException {
+        this.clientSocket = new Socket(host, port);  
         System.out.println("The client was successfully connected to the server!");
         
-        this.fromClient = client.getOutputStream();
-        this.toClient = client.getInputStream();
+        this.fromClient = clientSocket.getOutputStream();
+        this.toClient = clientSocket.getInputStream();
         clientPrinting = new PrintStream(fromClient);
     }
 
@@ -43,7 +47,7 @@ public class Client {
         
         clientPrinting.close();
         keyboard.close();
-        client.close();        
+        clientSocket.close();        
     }
 
     public static String getName(Scanner sc) {

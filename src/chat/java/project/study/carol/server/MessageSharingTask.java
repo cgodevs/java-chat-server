@@ -8,17 +8,17 @@ import java.util.Scanner;
 public class MessageSharingTask implements Runnable{
 
 	private InputStream client;
-    private Server servidor;
+    private Server server;
 
-    public MessageSharingTask(InputStream client, Server servidor) {
+    public MessageSharingTask(InputStream client, Server server) {
         this.client = client;
-        this.servidor = servidor;
+        this.server = server;
     }
 
     public void run() {        
         Scanner s = new Scanner(this.client);
         while (s.hasNextLine()) {
-            servidor.shareMessageToAll(s.nextLine());
+            server.shareMessageWithAll(s.nextLine());
         }
         s.close();
     }

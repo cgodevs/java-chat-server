@@ -33,11 +33,13 @@ public class Server {
             
             PrintStream clientOutput = new PrintStream(client.getOutputStream()); // adds the customer's output to the list
             this.clientsOutputsList.add(clientOutput);
-
+            
+            MessageSharingTask messageSharing =  new MessageSharingTask(client.getInputStream(), this);
+            new Thread(messageSharing).start();  // starts a separate thread for treating one client's connection 
         }
     }
 
-    public void shareMessageToAll(String msg) { // to all clients, including the server        
+    public void shareMessageToAll(String msg) { // to all clients (server not included)
         for (PrintStream console : this.clientsOutputsList) {
         	console.println(msg);
         }

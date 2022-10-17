@@ -5,12 +5,12 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class MessageSharingTask implements Runnable{
+public class ClientSharingTask implements Runnable{
 
 	private InputStream client;
     private Server server;
 
-    public MessageSharingTask(InputStream client, Server server) {
+    public ClientSharingTask(InputStream client, Server server) {
         this.client = client;
         this.server = server;
     }

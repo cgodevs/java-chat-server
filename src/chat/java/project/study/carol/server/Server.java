@@ -13,13 +13,13 @@ import chat.java.project.study.carol.client.Client;
 public class Server {
 
 	private int port;
-	private List<PrintStream> clientsOutputList;
+	private List<PrintStream> allClientsPrintStreams;
 	private AtomicBoolean isOn;
 	ServerSocket server;
 	
 	public Server (int port) throws IOException {
 		this.port = port;
-		this.clientsOutputList = new ArrayList<PrintStream>();
+		this.allClientsPrintStreams = new ArrayList<PrintStream>();
 		this.isOn = new AtomicBoolean(true);
 		this.server = new ServerSocket(this.port);
 		System.out.println("*** Port 12345 is ready to be connected ***");
@@ -28,19 +28,20 @@ public class Server {
     public void start() throws IOException {
 
         while(isOn.get()) {            
-            try {
-				Socket client = server.accept(); // blocking method waiting for a client connection
-				System.out.println("New connection established with client at IP " 
-				+ client.getInetAddress().getHostAddress() + " and port " + client.getPort()); // gets the client's IP and port number
+            try {  // for each client's connection
+				Socket clientConnection = server.accept(); // blocking method waiting for a client connection
+
+				PrintStream clientPrintStream = new PrintStream(clientConnection.getOutputStream()); // gets hold of printing to the client's console 
+				this.allClientsPrintStreams.add(clientPrintStream);
 				
-				PrintStream clientOutput = new PrintStream(client.getOutputStream()); // adds the customer's output to the list
-				this.clientsOutputList.add(clientOutput);
+				ClientSharingTask shareWithOthers =  new ClientSharingTask(clientConnection.getInputStream(), this);
+				new Thread(shareWithOthers).start();  
+
+				ServerSharingTask getMessagesFromServer = new ServerSharingTask(clientConnection.getInputStream(), this);
+				new Thread(getMessagesFromServer).start();
+
+				System.out.printf("New connection established with client at port %d\n", clientConnection.getPort()); // client's acceptance port number
 				
-				ClientSharingTask messageSharing =  new ClientSharingTask(client.getInputStream(), this);
-				new Thread(messageSharing).start();  // starts a separate thread for treating one client's connection
-				
-				ServerSharingTask serverMessaging = new ServerSharingTask(client.getInputStream(), this);
-				new Thread(serverMessaging).start();
 			} catch (SocketException e) {
 				System.out.println("Is the socket running? " + this.isOn.get());
 			}
@@ -53,7 +54,7 @@ public class Server {
     }    
     
     public void shareMessageWithAll(String msg) { // to all clients (server not included)
-        for (PrintStream console : clientsOutputList) {
+        for (PrintStream console : allClientsPrintStreams) {
         	console.println(msg);
         }
     }

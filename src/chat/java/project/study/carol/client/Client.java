@@ -14,8 +14,6 @@ public class Client {
 	private Socket clientSocket;
     protected String clientName;
     protected Scanner keyboard = new Scanner(System.in);
-    private OutputStream fromClient;
-    private InputStream toClient;
     protected PrintStream clientPrinting;
 
     public PrintStream getClientPrinting() {
@@ -24,26 +22,22 @@ public class Client {
 
 	public Client (String host, int port) throws UnknownHostException, IOException {
         this.clientSocket = new Socket(host, port);  
+        clientPrinting = new PrintStream(clientSocket.getOutputStream());
         System.out.println("The client was successfully connected to the server!");
-        
-        this.fromClient = clientSocket.getOutputStream();
-        this.toClient = clientSocket.getInputStream();
-        clientPrinting = new PrintStream(fromClient);
     }
 
     public void startCommunication() throws IOException, InterruptedException {
     	this.clientName = getName(keyboard); 
     	
     	// THREAD 0: Gets messages from other Clients through the server
-        ReceiveFromServerTask getServerMessages = new ReceiveFromServerTask(toClient);
-        Thread fromServer = new Thread(getServerMessages);
-        fromServer.start();
+        ReceiveFromServerTask getServerMessages = new ReceiveFromServerTask(clientSocket.getInputStream());
+        Thread serverFeed = new Thread(getServerMessages);
+        serverFeed.start();
         
         // THREAD 1: Sends this client's messages to other clients
-        PrintClientMessagesTask printClientMessages = new PrintClientMessagesTask(this);
-        Thread toClients = new Thread(printClientMessages);
-        toClients.start();        
-        toClients.join();
+        Thread shareWithOthers = new Thread(new PrintClientMessagesTask(this));
+        shareWithOthers.start();        
+        shareWithOthers.join();
         
         clientPrinting.close();
         keyboard.close();
